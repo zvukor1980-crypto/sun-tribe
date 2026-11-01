@@ -1,6 +1,6 @@
 'use strict';
 // ===== Static game data: buildings, heroines, outfits, regions, quests, shop, i18n =====
-const VERSION='2.0.0';
+const VERSION='3.0.0';
 const RES=['coins','wood','stone','food','gems','tickets','books','shards','petals'];
 const RI={coins:'🪙',wood:'🪵',stone:'🪨',food:'🍖',gems:'💎',tickets:'🎟️',books:'📕',shards:'⭐',petals:'🌸',xp:'✨',charm:'💖'};
 // res: produced resource, rate: per minute at L1, cost at L1, time sec at L1, hall: unlock hall level, max: count
