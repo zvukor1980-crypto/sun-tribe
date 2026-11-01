@@ -27,6 +27,20 @@
  <div id="toasts"></div>
  <div id="intro" class="intro" style="display:none"></div>
 </div>
+<script>
+/* Real full-screen height. iOS home-screen apps (iOS 26+) report innerHeight/100%/dvh = screen minus the top inset,
+   leaving an empty strip at the bottom; the large viewport (100lvh) is the true screen there. */
+(function(){var d=document.documentElement,pr=null,last=0;
+function sa(){return navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)}
+function fit(){var h=window.innerHeight;
+ if(sa()){if(!pr){pr=document.createElement('div');pr.style.cssText='position:absolute;left:-9px;top:0;width:1px;height:100vh;height:100lvh;visibility:hidden;pointer-events:none';document.body.appendChild(pr)}
+  var l=pr.offsetHeight;if(l>h&&l-h<=120)h=l;}
+ if(h!==last){last=h;d.style.setProperty('--apph',h+'px');window.dispatchEvent(new Event('apph'))}
+ if(window.scrollY||window.scrollX)window.scrollTo(0,0);}
+fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){fit();setTimeout(fit,250);setTimeout(fit,700)});
+if(window.visualViewport)visualViewport.addEventListener('resize',fit);addEventListener('scroll',function(){if(window.scrollY||window.scrollX)window.scrollTo(0,0)});
+addEventListener('pageshow',fit);document.addEventListener('visibilitychange',fit);window.__fitH=fit;})();
+</script>
 <script src="js/data.js"></script>
 <script src="js/data2.js"></script>
 <script src="js/audio.js"></script>

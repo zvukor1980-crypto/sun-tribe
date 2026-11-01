@@ -24,8 +24,11 @@ function newState(lang){
   gift:0,tfree:0,last:now(),era:1,seenTut:0,tut:0,stats:Object.assign({},STATS0),
   decor:[],dinv:{},daily:{day:null,streak:0},chest:0,ach:{},dt:{day:null,list:[],prog:[],done:[],all:false}};
 }
-function migrate(o){ const S0=newState(o.lang); const n=Object.assign(S0,o);
- n.r=Object.assign({},S0.r,o.r); n.stats=Object.assign({},STATS0,o.stats||{});
+function migrate(o){ const D=newState(o.lang); const n=Object.assign(newState(o.lang),o);
+ n.r=Object.assign({},D.r,o.r||{}); for(const k in n.r) if(!Number.isFinite(n.r[k])) n.r[k]=D.r[k]||0;
+ n.stats=Object.assign({},STATS0,o.stats||{}); for(const k in n.stats) if(!Number.isFinite(n.stats[k])) n.stats[k]=0;
+ n.daily=Object.assign({},D.daily,o.daily||{}); n.dt=Object.assign({},D.dt,o.dt||{}); for(const k of ['decor']) if(!Array.isArray(n[k])) n[k]=[];
+ for(const k of ['dinv','ach','reg','h']) if(!n[k]||typeof n[k]!=='object') n[k]=D[k];
  if(o.v===1){ n.exps=o.exp?[o.exp]:[]; delete n.exp; n.q=o.q<OLDQ.length?OLDQ[o.q]:QUESTS.length; n.chest=0; n.tut=9;
   n.stats.builds=(o.b||[]).reduce((a,b)=>a+(b.lvl||0),0); }
  if(!Array.isArray(n.exps)) n.exps=[];
@@ -380,7 +383,7 @@ function initCam(){ const v=$('#view'); const pts=new Map(); let moved=0, lastDr
  window.addEventListener('pointerup',up); window.addEventListener('pointercancel',up);
  v.addEventListener('click',e=>{ if(now()-lastDrag<250){ e.stopPropagation(); e.preventDefault(); } },true);
  v.addEventListener('wheel',e=>{ e.preventDefault(); const r=vr(); zoomAt(e.clientX-r.left,e.clientY-r.top,cam.z*(e.deltaY<0?1.1:0.9)); },{passive:false});
- window.addEventListener('resize',()=>camApply()); }
+ window.addEventListener('resize',()=>camApply()); window.addEventListener('apph',()=>camApply()); }
 function centerView(){ const {vw,vh,minZ}=camLimits(); const z=Math.max(minZ,Math.min(1,Math.min(vw,vh)/560)); const p=PLOTS[0]; panTo(p[0],p[1]-(vw>vh?110:60),z); }
 
 // ---------- village ----------
@@ -597,9 +600,12 @@ function openMap(sel){ sfx('open');
    else { const full=S.exps.length>=expSlots(); info+=`<div>${t('reward')}: ${rwStr(r.rw)}${sel!=='far'?' · '+t('plots'):''}${r.bon?' · '+(r.bon==='all'?'💫':RI[r.bon])+'+5%':''}</div><div>${RI.food} ${fmt(r.food)} · ⏱ ${ftime(expTime(r))} · 🗼${r.tw}</div>`+
      (st==='locked'?`<div class="warn">🔒 ${t('needtower',{n:r.tw})}</div>`:full?`<div class="warn">${t('noslot')}</div>`:`<button class="btn g" data-a="go">⛵ ${t('explore')}</button>`); }
    info+='</div>'; }
-  openModal('map',{title:`🗺️ ${t('map')} <small>🗼${towerLvl()} · ${exploredCount()}/${REG.length-1} · ${t('exps',{a:S.exps.length,b:expSlots()})}</small>`,body:`<div class="mapv"><div class="mapi"><img src="a/ui/map.webp">${mk}</div></div>${slots}${info||`<div class="note">${t('expslots')}</div>`}`},'full mapm');
-  { const mv=$('.mapv'), mi=$('.mapi'); const tk=sel||'home', r=tk==='far'?{x:94,y:20}:REG.find(x=>x.k===tk); if(mv&&mi&&r) requestAnimationFrame(()=>{ mv.scrollLeft=mi.clientWidth*r.x/100-mv.clientWidth/2; mv.scrollTop=mi.clientHeight*r.y/100-mv.clientHeight/2; }); }
-  on('.mk',el=>{ sfx('tap'); draw(el.dataset.k); }); on('.es.on',el=>{ sfx('tap'); draw(el.dataset.k); });
+  const SI={done:'🚩',going:'⛵',open:'❗',locked:'🔒'};
+  const rl=REG.filter(r=>r.k!=='home').map(r=>{ const st=regState(r); return `<div class="rrow ${st}${sel===r.k?' sel':''}" data-k="${r.k}"><span>${SI[st]}</span><b>${t('g_reg_'+r.k)}</b><small>${st==='done'?'✓ '+(r.bon==='all'?'💫':RI[r.bon])+'+5%':st==='locked'?'🗼'+r.tw:'⏱ '+ftime(expTime(r))}</small></div>`; }).join('')
+   + (allDone?`<div class="rrow ${fe?'going':'open'}${sel==='far'?' sel':''}" data-k="far"><span>🌀</span><b>${t('endless')} #${S.far+1}</b><small>⏱ ${ftime(expTime(farReg()))}</small></div>`:'');
+  const hint=expSlots()<3?`<div class="note">${t('expslots')}</div>`:'';
+  openModal('map',{title:`🗺️ ${t('map')} <small>🗼${towerLvl()} · ${exploredCount()}/${REG.length-1} · ${t('exps',{a:S.exps.length,b:expSlots()})}</small>`,body:`<div class="mapv"><div class="mapi"><img src="a/ui/map.webp">${mk}</div></div><div class="mside">${slots}${info||hint}<div class="rlist">${rl}</div></div>`},'full mapm');
+  on('.mk,.rrow',el=>{ sfx('tap'); draw(el.dataset.k); }); on('.es.on',el=>{ sfx('tap'); draw(el.dataset.k); });
   on('[data-a=go]',()=>startExp(sel==='far'?farReg():REG.find(x=>x.k===sel)));
   on('[data-a=spd]',()=>{ const e=expOf(sel); if(!e) return; const rem=(e.end-now())/1000, c=rem<30?0:Math.ceil(rem/120); if(S.r.gems<c){ toast(t('nores'),'bad'); sfx('error'); return; } S.r.gems-=c; e.end=now(); tick(); draw(sel); });
   modalTick=()=>{ $$('.est').forEach(x=>{ const e=expOf(x.dataset.k); if(e) x.textContent=' '+ftime((e.end-now())/1000); });
