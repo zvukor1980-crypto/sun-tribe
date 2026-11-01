@@ -1,8 +1,8 @@
 'use strict';
 // ===== Static game data: buildings, heroines, outfits, regions, quests, shop, i18n =====
-const VERSION='1.0.0';
-const RES=['coins','wood','stone','food','gems','tickets','books','shards'];
-const RI={coins:'🪙',wood:'🪵',stone:'🪨',food:'🍖',gems:'💎',tickets:'🎟️',books:'📕',shards:'⭐',xp:'✨',charm:'💖'};
+const VERSION='2.0.0';
+const RES=['coins','wood','stone','food','gems','tickets','books','shards','petals'];
+const RI={coins:'🪙',wood:'🪵',stone:'🪨',food:'🍖',gems:'💎',tickets:'🎟️',books:'📕',shards:'⭐',petals:'🌸',xp:'✨',charm:'💖'};
 // res: produced resource, rate: per minute at L1, cost at L1, time sec at L1, hall: unlock hall level, max: count
 const BLD={
  hall:    {res:'coins', rate:2,   cost:{coins:120,wood:60,stone:30}, time:20, hall:0, max:1, slots:1},
@@ -40,14 +40,6 @@ const HER=[
 const STARTERS=['chief','guide','huntress','trader','captain'];
 const SYNERGY=[['huntress','sailor'],['trader','musician'],['chief','architect'],['knight','architect'],['captain','pilot'],['guide','inventor']];
 // outfits: id, img, charm, price
-const OUT={};
-HER.forEach(h=>OUT[h.k]=[{id:'base',img:'a/h/'+h.k+'.webp',m:h.k,ch:2,p:null}]);
-OUT.chief.push({id:'gown',img:'a/o/chief_2.webp',m:null,ch:12,p:{gems:25}},{id:'suit',img:'a/o/chief_3.webp',m:null,ch:8,p:{coins:3000}});
-OUT.huntress.push({id:'violet',img:'a/o/huntress_2.webp',m:'huntress_2',ch:8,p:{coins:1800}},{id:'trench',img:'a/o/huntress_3.webp',m:'huntress_3',ch:12,p:{gems:25}});
-OUT.trader.push({id:'gold',img:'a/o/trader_2.webp',m:null,ch:8,p:{coins:2000}},{id:'emerald',img:'a/o/trader_3.webp',m:'trader_3',ch:12,p:{gems:25}});
-OUT.captain.push({id:'sailor',img:'a/o/captain_2.webp',m:'captain_2',ch:8,p:{coins:2200}},{id:'coat',img:'a/o/captain_3.webp',m:'captain_3',ch:12,p:{gems:30}});
-OUT.guide.push({id:'gown',img:'a/o/guide_2.webp',m:null,ch:12,p:{gems:25}},{id:'tribal',img:'a/o/guide_3.webp',m:'guide_3',ch:8,p:{coins:1500}},
- {id:'space',img:'a/o/guide_4.webp',m:null,ch:15,p:{hall:10}},{id:'trench',img:'a/o/guide_5.webp',m:'guide_5',ch:10,p:{coins:2600}},{id:'beach',img:'a/o/guide_6.webp',m:null,ch:10,p:{tickets:2}});
 const HUES=[null,330,0,25,48,135,180,215,275];
 
 // map regions: % position on map, tower level req, food cost, minutes, rewards
@@ -63,41 +55,13 @@ const REG=[
  {k:'dome',  x:90.4,y:56.1, tw:12,food:25000,min:180,rw:{gems:120,shards:50,tickets:5}, bon:'all'},
 ];
 // quests: g=[type, arg, n], r=reward
-const QUESTS=[
- {g:['build','sawmill',1], r:{coins:60,xp:20}},
- {g:['collect','wood',20], r:{coins:40,xp:20}},
- {g:['build','house',1],   r:{wood:30,xp:25}},
- {g:['collect','coins',60],r:{wood:40,xp:25}},
- {g:['build','farm',1],    r:{coins:80,xp:30}},
- {g:['assign',null,1],     r:{gems:5,xp:30}},
- {g:['upgrade','hall',2],  r:{coins:150,xp:40}},
- {g:['build','quarry',1],  r:{wood:80,xp:40}},
- {g:['build','tower',1],   r:{stone:60,xp:50}},
- {g:['build','tavern',1],  r:{tickets:1,xp:50}},
- {g:['own',null,2],        r:{gems:10,xp:60}},
- {g:['herolvl',null,2],    r:{food:150,xp:60}},
- {g:['explore',null,1],    r:{gems:10,xp:70}},
- {g:['upgrade','hall',3],  r:{coins:400,xp:80}},
- {g:['build','market',1],  r:{wood:150,stone:80,xp:80}},
- {g:['color',null,1],      r:{gems:10,xp:60}},
- {g:['build','boutique',1],r:{coins:600,xp:90}},
- {g:['outfit',null,1],     r:{tickets:1,xp:100}},
- {g:['collect','coins',3000],r:{gems:15,xp:100}},
- {g:['upgrade','hall',4],  r:{stone:300,xp:120}},
- {g:['build','workshop',1],r:{books:5,xp:120}},
- {g:['bldlvl',null,5],     r:{gems:20,xp:150}},
- {g:['upgrade','hall',5],  r:{gems:30,shards:10,xp:200}},
- {g:['own',null,4],        r:{gems:20,xp:200}},
- {g:['explore',null,3],    r:{tickets:2,xp:250}},
- {g:['herostar',null,2],   r:{gems:30,xp:250}},
- {g:['upgrade','hall',10], r:{gems:80,shards:30,xp:600}},
-];
+const QUESTS=[];
 function genQuest(i){ // endless quests after the chain
  const n=i-QUESTS.length, c=n%5, k=Math.floor(n/5);
- if(c===0) return {g:['upgrade','hall',11+k],r:{gems:30+5*k,xp:500+100*k}};
- if(c===1) return {g:['bldlvl',null,10+2*k],r:{shards:10+2*k,xp:300+60*k}};
+ if(c===0) return {g:['upgrade','hall',17+k],r:{gems:30+5*k,xp:500+100*k}};
+ if(c===1) return {g:['bldlvl',null,20+2*k],r:{shards:10+2*k,xp:300+60*k}};
  if(c===2) return {g:['collect','coins',Math.round(20000*Math.pow(1.4,k))],r:{gems:20+3*k,xp:300+60*k}};
- if(c===3) return {g:['herolvl',null,8+3*k],r:{books:10+3*k,tickets:1,xp:300+60*k}};
+ if(c===3) return {g:['herolvl',null,20+3*k],r:{books:10+3*k,tickets:1,xp:300+60*k}};
  return {g:['explore',null,REG.length+k],r:{gems:25+4*k,shards:10,xp:300+60*k}};
 }
 const SHOP=[
@@ -196,4 +160,3 @@ he:{title:'שבט השמש',tap:'הקישו כדי להתחיל',lang:'שפה',s
  sync:'סינרגיה',version:'גרסה',mute:'מושתק',tapcollect:'הקישו על מבנה כדי לאסוף',buildmenu:'מה לבנות?',hint_offline:'הטיימרים ממשיכים גם כשהמשחק סגור.',
  speedfree:'חינם (<30 שנ׳)',confirm:'אישור',cost:'מחיר',time:'זמן',owned_n:'בשבט: {n}',star_need:'רסיסים: {a}/{b}',assign_to:'לאן לשלוח?',none:'אף אחת',stats:'נתונים',heroxp:'ניסיון גיבורה',playerxp:'ניסיון שחקן'}
 };
-const MASKH={"architect":null,"astronaut":275,"captain":225,"chief":5,"guide":335,"huntress":125,"inventor":355,"knight":215,"mayor":null,"musician":335,"pilot":55,"sailor":225,"trader":185,"captain_2":225,"captain_3":355,"chief_2":null,"chief_3":null,"guide_1":335,"guide_2":null,"guide_3":5,"guide_4":null,"guide_5":355,"guide_6":null,"huntress_2":275,"huntress_3":5,"trader_2":null,"trader_3":155};
