@@ -1,0 +1,29 @@
+/* 3.0.1 — warm island palette, quieter panels and safe touch targets. */
+:root{--navb:calc(var(--navh) + max(8px,var(--sb)))}
+html,body{background:#123f48}
+#view{background:radial-gradient(ellipse at 45% 35%,#77dace,#2c9cac 55%,#124d72)}
+#nav{background:linear-gradient(#235460f5,#123440fa);border-color:#e1bc76;padding-bottom:max(8px,var(--sb));box-shadow:0 -6px 24px #082f4255}
+#nav button{min-height:52px}#nav button.on{background:linear-gradient(#e7c88733,#e7c88711);box-shadow:inset 0 0 0 1px #e7c887}
+#nav .nl{color:#fff0d0;font-weight:600}
+.sheet{background:linear-gradient(145deg,#315c63,#163b48 70%);border:1px solid #cbb57a;border-radius:22px;box-shadow:0 18px 65px #00192399,inset 0 1px #fff4}
+.mhead{flex-shrink:0;padding:14px;border-bottom:1px solid #e7c88744;background:#12333b55;border-radius:21px 21px 0 0;gap:10px}
+.mbody{min-height:0;padding:14px;scrollbar-width:thin;scrollbar-color:#bca978 #1c3e48}
+.mhead h2{font-size:20px;line-height:1.2}.mhead button{min-width:44px;min-height:44px;flex-shrink:0}
+.btn{min-height:44px;border-radius:12px;box-shadow:0 3px 0 #071d2833;text-shadow:none}.btn.g{background:linear-gradient(#83bd78,#428563);color:#fff}.btn.b{background:linear-gradient(#5a9eb7,#33768d)}.btn.gr{background:#ffffff18;border:1px solid #ffffff40}
+button:focus-visible{outline:3px solid #ffe1a0;outline-offset:2px}
+.bgrid,.dgrid{gap:12px}.bcard,.dcard{padding:12px 9px;background:linear-gradient(#f8e8c91a,#ffffff08);border:1px solid #d9c69b66;border-radius:16px;box-shadow:0 4px 10px #09242d33}
+.bcard img{height:112px}.bn{font-size:15px;color:#ffedc4}.bp,.bc{font-size:12px;line-height:1.5}.bcard .btn,.dcard .btn{margin-top:8px;width:100%}
+.hcard{border-width:1px;border-color:#ead4a3;box-shadow:0 5px 15px #001c3c44}.hcard img{border-color:#e6c58a}
+.note,.nowp,.up{background:#0d293b55;line-height:1.5;border:1px solid #ffffff18}
+#qtrack{background:linear-gradient(#fff6df,#ecddbb);border:1px solid #d8aa60;color:#3d3b24;box-shadow:0 4px 15px #12313f33;max-width:calc(100% - var(--sl) - var(--sr) - 78px)}
+#side{flex-wrap:nowrap;max-height:none;bottom:calc(var(--navb) + 12px);overflow-y:auto;overflow-x:hidden;padding:4px 6px 9px;scrollbar-width:none;gap:9px}
+#side::-webkit-scrollbar{display:none}#side button{flex-shrink:0;border:1px solid #d6c394;background:linear-gradient(#fbf0d9,#d9e8d8);box-shadow:0 3px 8px #12313f44;border-radius:14px}
+#side button small{background:#254a52;color:#fff4d4;bottom:-4px}
+.splash{background:radial-gradient(ellipse at 50% 32%,#85ccb755,#153744cc),url('a/ui/island.webp') center/cover}
+.splash h1{color:#ffe5a5;text-shadow:0 4px 14px #072b39}.splash .tapgo{background:#173e49bb;border:1px solid #ffe5a566;border-radius:30px;padding:14px 25px}
+@media(orientation:landscape){
+ #nav{padding-bottom:max(8px,var(--sb))}#side{bottom:calc(var(--sb) + 12px);max-height:none;flex-wrap:nowrap}
+ .modal.show{padding-top:var(--st);padding-bottom:var(--sb)}.sheet.full{height:calc(100% - 12px);max-height:calc(100% - 12px)}
+ .mhead{padding:8px 12px}.mbody{padding:10px 12px}.bcard img{height:90px}
+}
+@media(prefers-reduced-motion:reduce){.plot,.dday.now,.tapgo,#qtrack.done{animation:none!important}}

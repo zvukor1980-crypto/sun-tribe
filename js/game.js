@@ -27,15 +27,19 @@ function newState(lang){
 function migrate(o){ const D=newState(o.lang); const n=Object.assign(newState(o.lang),o);
  n.r=Object.assign({},D.r,o.r||{}); for(const k in n.r) if(!Number.isFinite(n.r[k])) n.r[k]=D.r[k]||0;
  n.stats=Object.assign({},STATS0,o.stats||{}); for(const k in n.stats) if(!Number.isFinite(n.stats[k])) n.stats[k]=0;
- n.daily=Object.assign({},D.daily,o.daily||{}); n.dt=Object.assign({},D.dt,o.dt||{}); for(const k of ['decor']) if(!Array.isArray(n[k])) n[k]=[];
+ n.daily=Object.assign({},D.daily,o.daily||{}); n.dt=Object.assign({},D.dt,o.dt||{}); for(const k of ['b','decor']) if(!Array.isArray(n[k])) n[k]=[];
  for(const k of ['dinv','ach','reg','h']) if(!n[k]||typeof n[k]!=='object') n[k]=D[k];
  if(o.v===1){ n.exps=o.exp?[o.exp]:[]; delete n.exp; n.q=o.q<OLDQ.length?OLDQ[o.q]:QUESTS.length; n.chest=0; n.tut=9;
   n.stats.builds=(o.b||[]).reduce((a,b)=>a+(b.lvl||0),0); }
  if(!Array.isArray(n.exps)) n.exps=[];
  n.b.forEach(b=>{ if(b.flip==null) b.flip=false; });
- for(const k in n.h){ const s=n.h[k]; if(!s.hue) s.hue={}; if(!s.owned) s.owned=['base']; s.owned=s.owned.filter(id=>OUT[k]&&OUT[k].some(x=>x.id===id)); if(!s.owned.includes('base')) s.owned.unshift('base'); if(!OUT[k].some(x=>x.id===s.o)) s.o='base'; }
+ for(const k in n.h){ const s=n.h[k]; if(!OUT[k]||!s||typeof s!=='object'){delete n.h[k];continue;} s.sk=Object.assign({res:0,build:0,charm:0},s.sk||{}); if(!s.hue) s.hue={}; if(!Array.isArray(s.owned)) s.owned=['base']; s.owned=s.owned.filter(id=>OUT[k]&&OUT[k].some(x=>x.id===id)); if(!s.owned.includes('base')) s.owned.unshift('base'); if(!OUT[k].some(x=>x.id===s.o)) s.o='base'; }
+ if(n.started&&!n.h[n.leader]) n.leader=Object.keys(n.h)[0]||null;
  n.v=2; return n; }
-function save(){ if(!S) return; S.last=now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} lastSave=now(); }
+let saveWarningAt=0;
+function save(){ if(!S) return false; const stamp=now(), previous=S.last; S.last=stamp;
+ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); lastSave=stamp; return true; }
+ catch(e){ S.last=previous; if(stamp-saveWarningAt>60000){ saveWarningAt=stamp; toast(S.lang==='ru'?'Не удалось сохранить игру. Освободи место на устройстве и не закрывай игру.':S.lang==='he'?'השמירה נכשלה. פנו מקום ואל תסגרו את המשחק.':'Could not save. Free some storage and keep the game open.','bad'); } return false; } }
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){ const o=JSON.parse(j); if(o&&(o.v===1||o.v===2)) return migrate(o); } }catch(e){} return null; }
 
 // ---------- derived ----------
@@ -643,11 +647,12 @@ function openSettings(){ sfx('open'); const draw=()=>{
   <label class="sl">🔊 ${t('settings_sfx')} <input type="range" min="0" max="100" value="${Math.round(S.sv*100)}" id="ssv"></label>
   ${CANVIB?`<label class="sl tg">📳 ${t('vib')} <input type="checkbox" id="svb" ${S.vib?'checked':''}></label>`:''}
   <div class="note">${t('hint_offline')}<br>${t('version')} ${VERSION}</div>
-  <button class="btn r" data-a="reset">🗑️ ${t('reset')}</button></div>`},'mid');
+  <button class="btn b" data-a="update">↻ ${S.lang==='ru'?'Проверить обновление':S.lang==='he'?'בדיקת עדכון':'Check for update'}</button><button class="btn r" data-a="reset">🗑️ ${t('reset')}</button></div>`},'mid');
  const np=()=>{ const e=$('#snp'); if(e) e.textContent=S.mv>0?Audio2.trackName(Audio2.cur||Audio2.want||'menu'):t('musicoff'); }; np(); modalTick=np;
  on('[data-l]',el=>{ setLang(el.dataset.l); draw(); });
  $('#smv').oninput=e=>{ S.mv=e.target.value/100; Audio2.setVol(S.mv,S.sv); np(); }; $('#ssv').oninput=e=>{ S.sv=e.target.value/100; Audio2.setVol(S.mv,S.sv); };
  $('#ssv').onchange=()=>{ sfx('coin'); save(); }; $('#smv').onchange=()=>save(); if($('#svb')) $('#svb').onchange=e=>{ S.vib=e.target.checked; vib(20); save(); };
+ on('[data-a=update]',()=>checkUpdate());
  on('[data-a=reset]',()=>{ openModal('settings',{title:t('reset'),body:`<div class="set"><p>${t('resetq')}</p><div class="langs"><button class="btn r" data-a="y">${t('yes')}</button><button class="btn gr" data-a="n">${t('no')}</button></div></div>`},'mid');
   on('[data-a=y]',()=>{ localStorage.removeItem(SAVE_KEY); S=null; location.reload(); }); on('[data-a=n]',()=>draw()); }); };
  draw(); }
@@ -691,6 +696,24 @@ function boot(){ S=load(); if(!S) S=newState((navigator.language||'ru').slice(0,
  document.addEventListener('visibilitychange',()=>{ if(document.hidden){ save(); Audio2.suspend(); } else { Audio2.resume(); if(S.started){ const off=offlineCatchup(); renderVillage(); updHUD(); if(off&&!curModal) offlinePopup(off,null); } } });
  window.addEventListener('pagehide',save);
  document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('dblclick',e=>e.preventDefault());
- if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+ if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
  window.__S=()=>S; }
 window.addEventListener('DOMContentLoaded',boot);
+
+async function checkUpdate(){
+ const msg=(ru,en,he)=>S.lang==='ru'?ru:S.lang==='he'?he:en;
+ if(!save()) return;
+ const btn=document.querySelector('[data-a=update]'); if(btn)btn.disabled=true;
+ let timer;
+ try{
+  if(!('serviceWorker' in navigator))throw Error('unsupported');
+  toast(msg('Проверяю обновление…','Checking for updates…','בודק עדכון…'));
+  await Promise.race([(async()=>{
+   const reg=await navigator.serviceWorker.getRegistration(); if(!reg)throw Error('registration');
+   await reg.update(); const worker=reg.installing||reg.waiting;
+   if(worker&&worker.state!=='activated')await new Promise((resolve,reject)=>{const check=()=>{if(worker.state==='activated')resolve();else if(worker.state==='redundant')reject(Error('install'));};worker.addEventListener('statechange',check);check();});
+  })(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('timeout')),12000);})]);
+  location.reload();
+ }catch(e){toast(msg('Обновление недоступно. Проверь интернет и попробуй ещё раз.','Update unavailable. Check your connection and retry.','העדכון אינו זמין. בדקו את החיבור ונסו שוב.'),'bad');}
+ finally{clearTimeout(timer);if(btn)btn.disabled=false;}
+}

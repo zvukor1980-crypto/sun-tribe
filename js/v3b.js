@@ -132,7 +132,7 @@ const FILT={none:'',glam:'saturate(1.25) brightness(1.06) contrast(1.05)',neon:'
 const STK=['💋','✨','🌸','🔥','👑','💎','❤️','🦋','⭐','🍸','🌴','🎀'];
 const ST={k:null,stk:[]};
 const ALBUM_KEY='suntribe_album';
-function albumGet(){ try{ return JSON.parse(localStorage.getItem(ALBUM_KEY)||'[]'); }catch(e){ return []; } }
+function albumGet(){ try{ const a=JSON.parse(localStorage.getItem(ALBUM_KEY)||'[]'); return Array.isArray(a)?a.filter(p=>p&&typeof p==='object'&&typeof p.u==='string'):[]; }catch(e){ return []; } }
 function albumPut(a){ try{ localStorage.setItem(ALBUM_KEY,JSON.stringify(a)); return true; }catch(e){ return false; } }
 function cutSrc(o){ return 'a/c/'+o.img.split('/').pop(); }
 async function cutHue(k,o){ const s=S.h[k], hue=s&&s.hue?s.hue[o.id]:null, src=cutSrc(o); if(hue!=null&&o.m&&MASKH[o.m]!=null){ try{ return await recolored(src,o.m,hue); }catch(e){} } return src; }
