@@ -27,3 +27,5 @@ button:focus-visible{outline:3px solid #ffe1a0;outline-offset:2px}
  .mhead{padding:8px 12px}.mbody{padding:10px 12px}.bcard img{height:90px}
 }
 @media(prefers-reduced-motion:reduce){.plot,.dday.now,.tapgo,#qtrack.done{animation:none!important}}
+
+#side [data-s=update]{background:#21515d;color:#ffe3a0;border-color:#d4bd83}#side [data-s=update] span{font-size:30px}

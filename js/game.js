@@ -328,11 +328,11 @@ function on(sel,fn,root){ (root||document).querySelectorAll(sel).forEach(el=>el.
 function buildHUD(){ $('#hud').innerHTML=`
  <div class="lvbox" id="hlv"><div class="lvc"><span id="hlvn">1</span></div><div class="lvbar"><i id="hlvx"></i></div><div class="era" id="hera"></div></div>
  <div class="resrow">${['coins','wood','stone','food','gems'].map(r=>`<div class="rp" data-r="${r}"><b>${RI[r]}</b><span id="r_${r}">0</span></div>`).join('')}</div>
- <button class="gear" id="hgear">⚙️</button>`;
+ <button class="gear" id="hgear" aria-label="Настройки">⚙️</button>`;
  on('#hgear',()=>openSettings()); on('#hlv',()=>openHeroes()); on('.rp',()=>openShop());
- $('#side').innerHTML=[['ca','🧺',t('collall')],['daily','🎁',t('daily')],['chest','📦',t('chest')],['events','🎪',t('events')],['ach','🏆',t('ach')],['decor','🪴',t('decor')]]
-  .map(([k,i,n])=>`<button data-s="${k}" title="${n}"><span>${i}</span><small id="sd_${k}"></small><i class="dot"></i></button>`).join('');
- on('#side button',el=>{ sfx('open'); vib(6); hidePointer(); ({ca:collectAll,daily:openDaily,chest:openChest,events:openEvents,ach:openAch,decor:openDecor})[el.dataset.s](); }); }
+ $('#side').innerHTML=[['update','↻',S.lang==='ru'?'Обновить':S.lang==='he'?'עדכון':'Update'],['ca','🧺',t('collall')],['daily','🎁',t('daily')],['chest','📦',t('chest')],['events','🎪',t('events')],['ach','🏆',t('ach')],['decor','🪴',t('decor')]]
+  .map(([k,i,n])=>`<button data-s="${k}" title="${n}"><span>${i}</span><small id="sd_${k}">${k==='update'?n:''}</small><i class="dot"></i></button>`).join('');
+ on('#side button',el=>{ sfx('open'); vib(6); hidePointer(); ({update:checkUpdate,ca:collectAll,daily:openDaily,chest:openChest,events:openEvents,ach:openAch,decor:openDecor})[el.dataset.s](); }); }
 function updHUD(){ if(!$('#hlvn')) return; $('#hlvn').textContent=S.lv; $('#hlvx').style.width=(100*S.xp/xpNeed(S.lv))+'%';
  $('#hera').textContent=eraName(eraOf(hallLvl()))+' · 🔨'+busyBuilders()+'/'+S.builders;
  ['coins','wood','stone','food','gems'].forEach(r=>{ const e=$('#r_'+r); const v=fmt(S.r[r]); if(e.textContent!==v){ e.textContent=v; e.parentNode.classList.remove('pop'); void e.offsetWidth; e.parentNode.classList.add('pop'); } });
@@ -696,7 +696,7 @@ function boot(){ S=load(); if(!S) S=newState((navigator.language||'ru').slice(0,
  document.addEventListener('visibilitychange',()=>{ if(document.hidden){ save(); Audio2.suspend(); } else { Audio2.resume(); if(S.started){ const off=offlineCatchup(); renderVillage(); updHUD(); if(off&&!curModal) offlinePopup(off,null); } } });
  window.addEventListener('pagehide',save);
  document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('dblclick',e=>e.preventDefault());
- if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
+ if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{});});}).catch(()=>{});
  window.__S=()=>S; }
 window.addEventListener('DOMContentLoaded',boot);
 
