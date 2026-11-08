@@ -499,14 +499,24 @@ function pickHero(b,back){ const list=owned().map(h=>{ const s=S.h[h.k], here=s.
 
 // ---------- heroines ----------
 function stars(n,max=5){ let s=''; for(let i=1;i<=max;i++) s+=`<i class="${i<=n?'on':'off'}">★</i>`; return `<span class="stars">${s}</span>`; }
-function recText(h){ const r=h.rec; if(!r) return ''; if(r.t==='hall') return '🏛️ '+t('needhall',{n:r.v}); return RI[r.t]+' '+fmt(r.v); }
+function freeRecruit(k){ return k==='dj'||k==='florist'; }
+function recruitHero(k){
+ const h=H(k); if(!h||S.h[k]) return false;
+ if(!freeRecruit(k)){
+  const r=h.rec;if(!r||!S.b.some(b=>b.type==='tavern'&&b.lvl>0))return false;
+  if(r.t==='hall'){if(hallLvl()<r.v)return false;}else{if((S.r[r.t]||0)<r.v)return false;S.r[r.t]-=r.v;}
+ }
+ newHero(k);return true;
+}
+function inviteFreeHero(k){if(!freeRecruit(k)||!recruitHero(k))return;sfx('recruit');save();openHeroes();}
+function recText(h){ const r=h.rec; if(freeRecruit(h.k))return t('free'); if(!r) return ''; if(r.t==='hall') return '🏛️ '+t('needhall',{n:r.v}); return RI[r.t]+' '+fmt(r.v); }
 function openHeroes(){ const cards=HER.map(h=>{ const s=S.h[h.k];
-  if(!s) return `<div class="hcard no" data-k="${h.k}"><img src="${faceImg(h.k)}"><div class="hn">${hname(h.k)}</div><div class="hr">🔒 ${recText(h)}</div></div>`;
+  if(!s) return `<div class="hcard no" data-k="${h.k}"><img src="${faceImg(h.k)}"><div class="hn">${hname(h.k)}</div><div class="hr">${freeRecruit(h.k)?'🎁 '+t('recruit')+' · ':'🔒 '}${recText(h)}</div></div>`;
   const b=s.at!=null?S.b.find(x=>x.id===s.at):null; const ready=s.xp>=xpNeed(s.lvl)&&s.lvl<heroCap(h.k);
   return `<div class="hcard" data-k="${h.k}" style="--c:${h.c}"><img src="${faceImg(h.k)}">${ready?'<i class="dot2">⬆</i>':''}<div class="hn">${hname(h.k)}</div><div class="hl">${t('lvl')} ${s.lvl} ${stars(s.stars)}</div><div class="hr">${b?'🏠 '+bname(b.type):'· '+t('not_assigned')}</div></div>`; }).join('');
  openModal('heroes',{title:`👑 ${t('heroes')} <small>${t('owned_n',{n:owned().length+'/'+HER.length})}</small>`,
   body:`<div class="hbar"><button class="btn o sm" data-a="tav">🍹 ${t('tavern')}</button><button class="btn b sm" data-a="team">🤝 ${t('team')}</button><span class="chip">💖 ${charm()} · ${t('happiness')} +${happiness().toFixed(1)}%</span></div><div class="hgrid">${cards}</div>`},'full');
- on('.hcard:not(.no)',el=>openProfile(el.dataset.k)); on('.hcard.no',()=>openTavern()); on('[data-a=tav]',()=>openTavern()); on('[data-a=team]',()=>openTeam()); }
+ on('.hcard:not(.no)',el=>openProfile(el.dataset.k)); on('.hcard.no',el=>freeRecruit(el.dataset.k)?inviteFreeHero(el.dataset.k):openTavern()); on('[data-a=tav]',()=>openTavern()); on('[data-a=team]',()=>openTeam()); }
 function openProfile(k){ sfx('open'); const h=H(k);
  const draw=()=>{ const s=S.h[k], need=xpNeed(s.lvl), c=lvlCost(k), cap=heroCap(k); const b=s.at!=null?S.b.find(x=>x.id===s.at):null;
   const canLv=s.xp>=need&&s.lvl<cap; const tc={food:Math.ceil(15*Math.pow(1.12,s.lvl))};
@@ -543,13 +553,13 @@ function openTeam(){ const bs=S.b.filter(b=>b.lvl>0);
 function openTavern(){ sfx('open'); const tav=S.b.find(b=>b.type==='tavern'&&b.lvl>0);
  const draw=()=>{ const left=S.tfree-now();
   const cards=HER.filter(h=>h.rec).map(h=>{ const s=S.h[h.k], r=h.rec; let ok=!s&&tav;
-   if(r.t==='hall') ok=ok&&hallLvl()>=r.v; else ok=ok&&(S.r[r.t]||0)>=r.v;
+   if(freeRecruit(h.k))ok=!s;else if(r.t==='hall') ok=ok&&hallLvl()>=r.v; else ok=ok&&(S.r[r.t]||0)>=r.v;
    return `<div class="tcard${s?' got':''}" style="--c:${h.c}"><img loading="lazy" src="a/h/${h.k}.webp"><div class="tci"><b>${hname(h.k)}</b><small>${t('ro_'+h.k)}</small>
-    ${s?`<div class="chip">✓ ${t('recruited')}</div>`:`<button class="btn ${ok?'g':'gr'}" data-k="${h.k}" ${ok?'':'disabled'}>${t('recruit')} · ${r.t==='hall'?'🏛️'+r.v:RI[r.t]+fmt(r.v)}</button>`}</div></div>`; }).join('');
+    ${s?`<div class="chip">✓ ${t('recruited')}</div>`:`<button class="btn ${ok?'g':'gr'}" data-k="${h.k}" ${ok?'':'disabled'}>${t('recruit')} · ${freeRecruit(h.k)?t('free'):r.t==='hall'?'🏛️'+r.v:RI[r.t]+fmt(r.v)}</button>`}</div></div>`; }).join('');
   openModal('tavern',{title:'🍹 '+t('tavern')+` <small>${RI.tickets} ${S.r.tickets}</small>`,body:`<div class="tavtop">${!tav?`<div class="warn">🔒 ${t('needtav')}</div>`:
    left>0?`<div class="chip big" id="tft">${t('freeticket')} ${ftime(left/1000)}</div>`:`<button class="btn y" data-a="free">${t('getfree')}</button>`}</div><div class="tgrid">${cards}</div>`},'full tav');
   on('[data-a=free]',()=>{ S.r.tickets++; S.tfree=now()+12*3600e3; sfx('buy'); save(); draw(); });
-  on('[data-k]',el=>{ const h=H(el.dataset.k), r=h.rec; if(r.t!=='hall') S.r[r.t]-=r.v; newHero(h.k); sfx('recruit'); vib(30); save();
+  on('[data-k]',el=>{ const h=H(el.dataset.k); if(!recruitHero(h.k))return; sfx('recruit'); vib(30); save();
    celebrate('💃 '+t('recruited'),hname(h.k),t('ro_'+h.k),faceImg(h.k)); draw(); });
   modalTick=()=>{ const e=$('#tft'); if(e){ const l=S.tfree-now(); if(l<=0) draw(); else e.textContent=t('freeticket')+' '+ftime(l/1000); } }; };
  draw(); }

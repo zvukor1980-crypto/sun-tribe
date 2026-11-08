@@ -207,7 +207,7 @@ function openEvent(tab){ sfx('open'); const e=evEnsure(), id=e.id, E=EVS[id]; if
     +`<div class="etk3 bon${td.bon?' got':''}"><div><b>🎁 ${t('ev_allb')}</b><small>${td.got.filter(x=>x).length}/4</small></div>${td.bon?'<em>✓</em>':`<button class="btn ${td.got.every(x=>x)?'y':'gr'} sm" data-a="bon" ${td.got.every(x=>x)?'':'disabled'}>${RI[cur]}25 ${RI.gems}10</button>`}</div>`; }
   else if(evTab==='shop'){ const hk=E.hero, hs=S.h[hk], eo=OUT[hk][1], D=DECOR.find(x=>x.k===E.deco);
    panel=`<div class="esh3">
-    <div class="esc3"><img src="${faceImg(hk)}"><b>${hname(hk)}</b><small>${t('ev_her')} · ${t('ro_'+hk)}</small>${hs?`<em>✓ ${t('ev_got')}</em>`:`<button class="btn ${bal>=300?'g':'gr'} sm" data-b="her">${RI[cur]}300</button>`}</div>
+    <div class="esc3"><img src="${faceImg(hk)}"><b>${hname(hk)}</b><small>${t('ev_her')} · ${t('ro_'+hk)}</small>${hs?`<em>✓ ${t('ev_got')}</em>`:`<button class="btn ${freeRecruit(hk)||bal>=300?'g':'gr'} sm" data-b="her">${freeRecruit(hk)?t('free'):RI[cur]+'300'}</button>`}</div>
     <div class="esc3"><img src="${eo.tn}"><b>${t('o_'+eo.id)}</b><small>${t('ev_out')} · ${TH_ICON[eo.th]}</small>${hs&&hs.owned.includes(eo.id)?`<em>✓ ${t('ev_got')}</em>`:`<button class="btn ${hs&&bal>=200?'g':'gr'} sm" data-b="out">${RI[cur]}200</button>`}</div>
     <div class="esc3"><img src="a/d/${E.deco}.webp"><b>${t('d_'+E.deco)}</b><small>${t('ev_deco')} · 😊+${D.hap}%</small><button class="btn ${bal>=120?'g':'gr'} sm" data-b="deco">${RI[cur]}120</button></div>
     <div class="esc3"><div class="boxi">🎁</div><b>${t('ev_box')}</b><small>${t('ev_boxd')}</small><button class="btn ${bal>=25?'g':'gr'} sm" data-b="box">${RI[cur]}25</button></div></div>`; }
@@ -222,7 +222,7 @@ function openEvent(tab){ sfx('open'); const e=evEnsure(), id=e.id, E=EVS[id]; if
   on('[data-t]',el=>{ const i=+el.dataset.t, T=ETASK.find(x=>x.k===e.td.list[i]); if(e.td.got[i]||e.td.prog[i]<T.n) return; e.td.got[i]=1; S.r[cur]+=T.v; sfx('quest'); confetti(20); save(); updSide(); draw(); });
   on('[data-a=bon]',()=>{ if(e.td.bon||!e.td.got.every(x=>x)) return; e.td.bon=1; S.r[cur]+=25; give({gems:10}); sfx('achievement'); confetti(50); save(); updHUD(); updSide(); draw(); });
   on('[data-b]',el=>{ const b=el.dataset.b;
-   if(b==='her'){ if(S.h[E.hero]) return; if(bal<300){ toast(t('nores'),'bad'); sfx('error'); return; } S.r[cur]-=300; newHero(E.hero); sfx('recruit'); vib(30); save(); celebrate('💃 '+t('recruited'),hname(E.hero),t('ro_'+E.hero),faceImg(E.hero)); draw(); }
+   if(b==='her'){ if(S.h[E.hero]) return; const price=freeRecruit(E.hero)?0:300;if((S.r[cur]||0)<price){ toast(t('nores'),'bad'); sfx('error'); return; } S.r[cur]-=price; newHero(E.hero); sfx('recruit'); vib(30); save(); celebrate('💃 '+t('recruited'),hname(E.hero),t('ro_'+E.hero),faceImg(E.hero)); draw(); }
    else if(b==='out'){ const hs=S.h[E.hero], eo=OUT[E.hero][1]; if(!hs){ toast(t('ev_needher'),'bad'); sfx('error'); return; } if(hs.owned.includes(eo.id)) return; if(bal<200){ toast(t('nores'),'bad'); sfx('error'); return; }
     S.r[cur]-=200; hs.owned.push(eo.id); hs.o=eo.id; questEvent('outfit',null,1); dEvent('wear',1); sfx('outfit'); confetti(40); save(); celebrate('👗 '+t('ev_out'),t('o_'+eo.id),hname(E.hero),eo.tn); draw(); }
    else if(b==='deco'){ if(bal<120){ toast(t('nores'),'bad'); sfx('error'); return; } S.r[cur]-=120; S.dinv[E.deco]=(S.dinv[E.deco]||0)+1; sfx('buy'); toast('🪴 '+t('d_'+E.deco)+' · '+t('ev_instock'),'good'); save(); draw(); }

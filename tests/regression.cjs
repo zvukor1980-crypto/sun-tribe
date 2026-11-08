@@ -15,3 +15,10 @@ for(const a of assets)assert(fs.existsSync(a),a);
 for(const f of run('Object.values(OUT).flatMap(a=>a.flatMap(o=>[o.img,o.tn].filter(Boolean)))'))assert(fs.existsSync(f),f);
 assert(sw.includes("k.startsWith('suntribe-')&&k!==CACHE"));
 console.log('PASS: all scripts load, save roundtrip, malformed hero/building recovery, album recovery, quota failure, precache and outfit assets');
+
+run('S=newState("ru")');
+for(const k of ['dj','florist']){assert(run(`recruitHero('${k}')`));run(`S.h['${k}'].lvl=4`);assert.equal(run(`recruitHero('${k}')`),false);assert.equal(run(`S.h['${k}'].lvl`),4);}
+assert.equal(run('S.r.evn+S.r.evc'),0);assert.equal(run('S.r.coins'),150);assert.equal(run('S.b.length'),0);
+assert(run('migrate(JSON.parse(JSON.stringify(S))).h.dj.lvl===4'));
+assert.equal(run('recruitHero("carnival")'),false);
+console.log('PASS: Luna and Lil recruit without currency or tavern, duplicates preserve progress, save migration preserves ownership');
